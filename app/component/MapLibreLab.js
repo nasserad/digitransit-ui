@@ -1,13 +1,19 @@
 import React from 'react';
+import config from '../configurations/config'; // digitransit config resolver
 
 const MAPLIBRE_JS  = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
 const MAPLIBRE_CSS = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css';
 
+/**
+ * Load MapLibre only once (no bundler, no webpack loaders)
+ */
 function loadMapLibre() {
-  if (typeof window !== 'undefined' && window.maplibregl) return Promise.resolve(window.maplibregl);
+  if (typeof window !== 'undefined' && window.maplibregl) {
+    return Promise.resolve(window.maplibregl);
+  }
 
   return new Promise((resolve, reject) => {
-    // CSS once
+    // CSS
     if (!document.querySelector(`link[href="${MAPLIBRE_CSS}"]`)) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
@@ -15,12 +21,18 @@ function loadMapLibre() {
       document.head.appendChild(link);
     }
 
-    // JS once
+    // JS
     if (document.querySelector(`script[src="${MAPLIBRE_JS}"]`)) {
       const t = setInterval(() => {
-        if (window.maplibregl) { clearInterval(t); resolve(window.maplibregl); }
+        if (window.maplibregl) {
+          clearInterval(t);
+          resolve(window.maplibregl);
+        }
       }, 50);
-      setTimeout(() => { clearInterval(t); reject(new Error('MapLibre load timeout')); }, 15000);
+      setTimeout(() => {
+        clearInterval(t);
+        reject(new Error('MapLibre load timeout'));
+      }, 15000);
       return;
     }
 
@@ -44,31 +56,25 @@ export default class MapLibreLab extends React.Component {
   componentDidMount() {
     loadMapLibre()
       .then((maplibregl) => {
-        const style = {
-          version: 8,
-          sources: {
-            osm: {
-              type: 'raster',
-              tiles: [
-                'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
-              ],
-              tileSize: 256,
-              attribution: '© OpenStreetMap contributors'
-            }
-          },
-          layers: [{ id: 'osm', type: 'raster', source: 'osm' }]
-        };
+        /**
+         * IMPORTANT:
+         * Digitransit may run under an indexPath (e.g. /amman).
+         * We must respect it so this works locally AND in k8s behind ingress.
+         */
+        const base = config.indexPath ? `/${config.indexPath}` : '';
+        const styleUrl = `${base}/mapstyles/amman-raster.json`;
 
         this.map = new maplibregl.Map({
           container: this.containerRef.current,
-          style,
-          center: [35.9106, 31.9539], // Amman-ish
+          style: styleUrl,
+          center: [35.9106, 31.9539], // Amman
           zoom: 11
         });
 
-        this.map.addControl(new maplibregl.NavigationControl(), 'top-right');
+        this.map.addControl(
+          new maplibregl.NavigationControl(),
+          'top-right'
+        );
       })
       .catch((e) => this.setState({ err: e.message || String(e) }));
   }
@@ -79,7 +85,7 @@ export default class MapLibreLab extends React.Component {
 
   render() {
     if (this.state.err) {
-      return <div style={{ padding: 16 }}>MapLibre failed: {this.state.err}</div>;
+      return <div style={{ padding: 16 }}>MapLibre error: {this.state.err}</div>;
     }
     return <div ref={this.containerRef} style={{ width: '100%', height: '100vh' }} />;
   }
