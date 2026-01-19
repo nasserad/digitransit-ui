@@ -32,6 +32,10 @@ import getStopRoutes from './stopRoutes';
 import routeRoutes from './routeRoutes';
 import { withRouteContext } from './util/RouteContext';
 
+// MapLibre GL pulls in browser-only code (workers / `self`). Don't import it
+// at module top-level (SSR/server bundle will choke). We load it lazily in a
+// route `getComponent` instead.
+
 export const historyMiddlewares = [queryMiddleware];
 
 export const render = createRender({});
@@ -154,6 +158,19 @@ export default config => {
       {getStopRoutes()}
       {getStopRoutes(true) /* terminals */}
       {routeRoutes(config)}
+
+      <Route
+        path={`${config.indexPath === '' ? '' : `/${config.indexPath}`}/maplab`}
+        getComponent={() =>
+          import(
+            /* webpackChunkName: "maplab" */ './component/MapLibreLab'
+          ).then(getDefault)
+        }
+        render={({ Component, props, error, retry }) =>
+          getComponentOrLoadingRenderer({ Component, props, error, retry })
+        }
+      />
+
       <Route path={`/${PREFIX_BIKESTATIONS}/:id`}>
         {{
           content: (
