@@ -17,6 +17,10 @@ const YEAR = 1900 + new Date().getYear();
 const GEOCODING_BASE_URL =
   process.env.GEOCODING_BASE_URL || `${API_URL}/geocoding/v1`;
 
+//new zeft
+const MAPLIBRE_STYLE_URL = process.env.MAPLIBRE_STYLE_URL || null;
+
+
 const minLat = 31.8503732259;
 const maxLat = 32.051348742;
 const minLon = 35.7864609985;
@@ -45,6 +49,7 @@ export default {
     MAP_URL,
     MAP: {
       default: MAP_URL,
+      mapLibreStyleUrl: MAPLIBRE_STYLE_URL,
     },
 
     // Only works if you have a map service behind API_URL.
@@ -105,6 +110,16 @@ export default {
     useRetinaTiles: true,
     tileSize: 256,
     zoomOffset: 0,
+
+    //for the zeft
+    mapLibreStyleUrl: MAPLIBRE_STYLE_URL,
+    defaultCenter: [31.9539, 35.9106],
+    defaultZoom: 12,
+    minZoom: 1,
+    areaBounds: {
+      corner1: [minLat, minLon],
+      corner2: [maxLat, maxLon],
+    },
   },
 
   nearbyRoutes: {

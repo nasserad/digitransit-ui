@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import LeafletMap from 'react-leaflet/es/Map';
+import MapLibreLeafletBasemap from './MapLibreLeafletBasemap';
 import TileLayer from 'react-leaflet/es/TileLayer';
 import AttributionControl from 'react-leaflet/es/AttributionControl';
 import ScaleControl from 'react-leaflet/es/ScaleControl';
@@ -216,6 +217,9 @@ export default class Map extends React.Component {
     } = this.props;
     const { config } = this.context;
 
+    //the zeft 
+    const useMapLibreBasemap = Boolean(config?.map?.mapLibreStyleUrl);
+
     const naviProps = {}; // these define map center and zoom
     if (bottomPadding !== undefined && this.boundsOptions) {
       this.boundsOptions.paddingBottomRight = [
@@ -289,6 +293,10 @@ export default class Map extends React.Component {
     if (!isString(attribution) || isEmpty(attribution)) {
       attribution = false;
     }
+    if (useMapLibreBasemap) {
+      attribution = false; // also false (when MapLibre style is active to avoid showing wrng contibrution)
+    }
+
 
     if (geoJson) {
       Object.keys(geoJson)
@@ -348,16 +356,20 @@ export default class Map extends React.Component {
             onPopupopen={onPopupopen}
             closePopupOnClick={false}
           >
-            <TileLayer
-              url={mapUrl}
-              tileSize={config.map.tileSize || 256}
-              zoomOffset={config.map.zoomOffset || 0}
-              updateWhenIdle={false}
-              size={config.map.useRetinaTiles && L.Browser.retina ? '@2x' : ''}
-              minZoom={config.map.minZoom}
-              maxZoom={config.map.maxZoom}
-              attribution={attribution}
-            />
+            {useMapLibreBasemap ? (
+              <MapLibreLeafletBasemap styleUrl={config.map.mapLibreStyleUrl} />
+            ) : (
+              <TileLayer
+                url={mapUrl}
+                tileSize={config.map.tileSize || 256}
+                zoomOffset={config.map.zoomOffset || 0}
+                updateWhenIdle={false}
+                size={config.map.useRetinaTiles && L.Browser.retina ? '@2x' : ''}
+                minZoom={config.map.minZoom}
+                maxZoom={config.map.maxZoom}
+                attribution={attribution}
+              />
+            )}
             {attribution && (
               <AttributionControl
                 position={
