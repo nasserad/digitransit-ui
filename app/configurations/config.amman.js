@@ -1,21 +1,11 @@
 /* eslint-disable prefer-template */
 const CONFIG = 'amman';
+const API_URL = process.env.API_URL || 'http://api-hsl.64.225.92.233.nip.io';
+const MAP_URL = process.env.MAP_URL || '/maptiler/';
+const APP_DESCRIPTION = 'GTFS-based journey planner for Amman, powered by Digitransit.';
+const GEOCODING_BASE_URL =process.env.GEOCODING_BASE_URL || `${API_URL}/geocoding/v1`;
 
-// IMPORTANT:
-// - API_URL must be PUBLIC (Ingress/domain) because the browser calls it.
-// - Do NOT set API_URL to a Kubernetes service name like http://otp:8080 (browser can't resolve that).
-const API_URL = process.env.API_URL || 'http://api.64.225.92.233.nip.io';
-
-// Raster tiles (simple, safe default). Works for Leaflet + MapLibreLab use.
-const MAP_URL =
-  process.env.MAP_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-
-const APP_DESCRIPTION =
-  'GTFS-based journey planner for Amman, powered by Digitransit.';
 const YEAR = 1900 + new Date().getYear();
-
-const GEOCODING_BASE_URL =
-  process.env.GEOCODING_BASE_URL || `${API_URL}/geocoding/v1`;
 
 const minLat = 31.8503732259;
 const maxLat = 32.051348742;
@@ -29,39 +19,35 @@ const defaultLon = 35.9106;
 export default {
   CONFIG,
 
-  // ✅ Added: keeps routes.js stable for your /maplab route
-  // (so it becomes /maplab, not /undefined/maplab)
-  indexPath: '',
+  indexPath: '', //keeps routes.js stable for your /maplab route
 
   URL: {
     API_URL,
 
-    // ✅ Changed (safe default):
     // Standard OTP2 serves under /otp/routers/<router>/ when started with --serve.
-    // If your public API gateway/ingress uses a different path (e.g. /routing/v1/routers/amman/),
-    // set OTP_URL as an env var in the digitransit-ui Deployment.
     OTP: process.env.OTP_URL || `${API_URL}/otp/routers/amman/`,
 
     MAP_URL,
     MAP: {
       default: MAP_URL,
+      ar: MAP_URL,
+      en: MAP_URL,
     },
 
-    // Only works if you have a map service behind API_URL.
-    // If not, these might 404 but routing still works.
     STOP_MAP: {
-      default: `${API_URL}/map/v1/stop-map/`,
+      //default: `${API_URL}/map/v1/stop-map/`,
+      default: null,
+      ar: null,
+      en: null,
     },
     REALTIME_STOP_MAP: {
-      default: `${API_URL}/map/v1/stop-map/`,
+      default: null,
+      ar: null,
+      en: null,
     },
 
     PELIAS: `${GEOCODING_BASE_URL}/search`,
     PELIAS_REVERSE_GEOCODER: `${GEOCODING_BASE_URL}/reverse`,
-
-    // Keep these OFF (you said you don't have these layers)
-    // CITYBIKE_MAP: `${API_URL}/map/v1/citybike-map/`,
-    // DYNAMICPARKINGLOTS_MAP: `${API_URL}/map/v1/parking-map/`,
   },
 
   API_SUBSCRIPTION_QUERY_PARAMETER_NAME: null,
@@ -78,7 +64,9 @@ export default {
     default: 'Amman',
   },
 
-  title: 'Amman Link',
+  title: 'Amman',
+  textLogo: false,
+  logo: 'default/digitransit-logo.png',
 
   availableLanguages: ['ar', 'en'],
   defaultLanguage: 'en',
@@ -86,9 +74,7 @@ export default {
   timezoneData:
     'Asia/Amman|EET EEST|-20 -30|01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010|41e5',
 
-  favicon: './app/configurations/images/vsh/favicon.png',
-
-  textLogo: true,
+  favicon: './app/configurations/images/hsl/hsl-favicon.png',
 
   feedIds: [],
 
@@ -105,6 +91,15 @@ export default {
     useRetinaTiles: true,
     tileSize: 256,
     zoomOffset: 0,
+    minZoom: 10,
+    maxZoom: 18,
+    areaBounds: {
+      corner1: [31.83, 35.78],
+      corner2: [32.10, 36.05],
+    },
+    attribution:
+      '<a href="https://www.maptiler.com/copyright/" target="_blank" rel="noreferrer noopener">&copy; MapTiler</a> ' +
+      '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer noopener">&copy; OpenStreetMap contributors</a>',
   },
 
   nearbyRoutes: {
@@ -126,34 +121,38 @@ export default {
 
   showDisclaimer: true,
 
-  stopsMinZoom: 13,
+  stopsMinZoom: 99, //disabled for now
+  terminalStopsMinZoom: 99,
+  terminalStopsMaxZoom: 0,
+  stopsSmallMaxZoom: 0,
 
   colors: {
-    primary: '#403df2ff',
+    primary: '#403DF2',
   },
 
   sprites: 'assets/svg-sprite.default.svg',
 
-  appBarLink: { name: 'Amman', href: 'https://crazy.amazing' },
+  appBarLink: null,
+  //appBarLink: { name: 'Amman', href: 'https://crazy.amazing' },
 
   agency: {
     show: false,
   },
 
   socialMedia: {
-    title: 'amman-routing',
+    title: 'Amman <3 Digitransit',
     description: APP_DESCRIPTION,
 
-    image: {
-      url: '/img/hsl-social-share.png',
-      width: 400,
-      height: 400,
-    },
+    // image: {
+    //   url: '/img/hsl-social-share.png',
+    //   width: 400,
+    //   height: 400,
+    // },
 
-    twitter: {
-      card: 'summary',
-      site: '@verschwoerhaus',
-    },
+    // twitter: {
+    //   card: 'summary',
+    //   site: '@verschwoerhaus',
+    // },
   },
 
   dynamicParkingLots: {
@@ -169,12 +168,22 @@ export default {
   useTicketIcons: false,
 
   transportModes: {
-    airplane: {
+    tram: {
+      availableForSelection: false,
+      defaultValue: false,
+    },
+
+    rail: {
       availableForSelection: false,
       defaultValue: false,
     },
 
     subway: {
+      availableForSelection: false,
+      defaultValue: false,
+    },
+
+    airplane: {
       availableForSelection: false,
       defaultValue: false,
     },
@@ -190,25 +199,25 @@ export default {
     },
   },
 
-  streetModes: {
-    bicycle: {
-      availableForSelection: false,
-      defaultValue: false,
-      icon: 'biking',
-    },
+  // streetModes: {
+  //   bicycle: {
+  //     availableForSelection: false,
+  //     defaultValue: false,
+  //     icon: 'biking',
+  //   },
 
-    car_park: {
-      availableForSelection: false,
-      defaultValue: false,
-      icon: 'car-withoutBox',
-    },
+  //   car_park: {
+  //     availableForSelection: false,
+  //     defaultValue: false,
+  //     icon: 'car-withoutBox',
+  //   },
 
-    car: {
-      availableForSelection: false,
-      defaultValue: false,
-      icon: 'car_park-withoutBox',
-    },
-  },
+  //   car: {
+  //     availableForSelection: false,
+  //     defaultValue: false,
+  //     icon: 'car_park-withoutBox',
+  //   },
+  // },
 
   search: {
     lineRegexp: new RegExp(
@@ -342,7 +351,7 @@ export default {
   ],
 
   themeMap: {
-    amman: 'amman',
+    amman: 'ui-hsl',
   },
 
   cityBike: {

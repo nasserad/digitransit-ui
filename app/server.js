@@ -102,6 +102,42 @@ function isAssetRequest(req) {
 
 export default async function serve(req, res, next) {
   try {
+
+    //*** MapTiler raster proxy (hides key from browser)
+    //client requests: /maptiler/{z}/{x}/{y}@2x.png[?anything]
+    //server forwards: ${MAPTILER_BASE_URL}/{z}/{x}/{y}@2x.png?key=${MAPTILER_KEY}
+    if (req.path && req.path.startsWith('/maptiler/')) {
+      const base = process.env.MAPTILER_BASE_URL; // e.g. "https://api.maptiler.com/maps/<id>/256/"
+      const key = process.env.MAPTILER_KEY;
+
+      if (!base || !key) {
+        res.status(500).send('missing MAPTILER_BASE_URL or MAPTILER_KEY');
+        return;
+      }
+
+      try {
+        const subPath = req.originalUrl.replace(/^\/maptiler\/?/, ''); // keeps querystring too
+        const url = new URL(subPath, base.endsWith('/') ? base : `${base}/`);
+        url.searchParams.set('key', key); // inject/override key
+
+        const upstream = await fetch(url.toString());
+        res.status(upstream.status);
+
+        const ct = upstream.headers.get('content-type');
+        if (ct) res.setHeader('content-type', ct);
+
+        const cc = upstream.headers.get('cache-control');
+        if (cc) res.setHeader('cache-control', cc);
+
+        const buf = Buffer.from(await upstream.arrayBuffer());
+        res.end(buf);
+        return;
+      } catch (e) {
+        res.status(502).send(`maptiler proxy error: ${e.message}`);
+        return;
+      }
+    }
+
     // There might a better way to throw 404 if the asset is not found before this code
     // is run.
     if (isAssetRequest(req)) {

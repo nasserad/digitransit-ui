@@ -1,18 +1,37 @@
 @import '../../base/waltti';
 
-/* main theme colors */
-$primary-color: $livi-blue;
-$secondary-color: darken($primary-color, 20%);
-$highlight-color: $primary-color;
-$action-color: $primary-color;
-$bus-color: $primary-color;
-$viewpoint-marker-color: $primary-color;
-$current-location-color: $primary-color;
+/* Amman palette */
+$amman-indigo: #403DF2;
+$amman-ink:    #1B1A33;
+$amman-sand:   #F6F1E3;
+$amman-rose:   #E54BAA;
+
+/* Main theme colors */
+$primary-color: $amman-indigo;
+$secondary-color: $amman-ink;
+
+$highlight-color: $amman-rose;
+$favourite-color: $amman-rose;
+$action-color: $amman-indigo;
+
+$current-location-color: $amman-rose;
+$viewpoint-marker-color: $amman-indigo;
+
+$navigation-background-color: $amman-sand;
+$top-bar-color: $primary-color;
 
 $standalone-btn-color: $primary-color;
-$link-color: $primary-color;
+$standalone-btn-hover-color: $secondary-color;
+$standalone-btn-active-color: $secondary-color;
 
-/* Component palette */
+$link-color: $primary-color;
 $desktop-title-color: $primary-color;
 $desktop-title-arrow-icon-color: $secondary-color;
-$top-bar-color: $primary-color;
+
+/* Vehicle palette (optional but nice) */
+//most of these wont work?
+$bus-color: $primary-color;
+$tram-color: #008151;
+$metro-color: #ca4000;
+$rail-color: #8c4799;
+$ferry-color: #007a97;

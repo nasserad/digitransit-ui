@@ -738,6 +738,7 @@ export default {
     kela: 'kelareitit',
     pori: 'pori',
     raasepori: '(raasepori|bosse)',
+    amman: 'ui-hsl',
   },
 
   minutesToDepartureLimit: 9,
